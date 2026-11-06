@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -124,6 +125,20 @@ public class StudentService {
         }
 
         return this.studentRepository.save(oldStudent);
+    }
+
+    public Student deactivateStudent(Integer studentId) {
+        Integer callerId = this.userUtils.getUserId();
+        if (callerId == null || !(this.userUtils.hasRole("ROLE_instructor") || this.userUtils.hasRole("ROLE_admin"))) {
+            throw new AccessDeniedException("No permission.");
+        }
+        Student student = this.studentRepository.findManageableStudentById(studentId, callerId)
+                .orElseThrow(() -> new AccessDeniedException("No permission."));
+        if (!student.isEnabled()) {
+            return student;
+        }
+        student.setEnabled(false);
+        return this.studentRepository.saveAndFlush(student);
     }
 
     public void deleteStudent(Integer studentId) {
