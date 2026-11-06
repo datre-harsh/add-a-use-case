@@ -76,4 +76,11 @@ public class StudentController {
         return new Result(true, StatusCode.SUCCESS, "Delete student successfully", null);
     }
 
+    @PutMapping("/{studentId}/deactivation")
+    public Result deactivateStudent(@PathVariable Integer studentId) {
+        Student student = this.studentService.deactivateStudent(studentId);
+        return new Result(true, StatusCode.SUCCESS, "Student deactivated successfully",
+                this.studentToStudentDtoConverter.convert(student));
+    }
+
 }
