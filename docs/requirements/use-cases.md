@@ -1478,6 +1478,8 @@ Details:
   - 1a1. The system refuses protected access under FR-SEC-authentication and FR-SEC-active-account and requests sign-in. Nothing is changed. Use case ends.
 - **2a. The target does not exist, or the caller is not authorized for that target:**
   - 2a1. The system refuses the action under BR-student-lifecycle and BR-section-scoped-access without revealing whether the student exists. Nothing is changed. Use case ends.
+- **4a. The course admin or instructor cancels or dismisses the warning before confirming:**
+  - 4a1. The system returns to the student details without submitting a deactivation request or changing any data. Use case ends.
 - **6a. The selected student is already deactivated, including a repeated confirmation:**
   - 6a1. After checking the caller's authority, the system confirms that the student is deactivated without changing her account, membership, or submitted work. Use case ends.
 - **6b. The caller lost authority after viewing the warning:**
