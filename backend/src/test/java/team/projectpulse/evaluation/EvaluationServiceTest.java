@@ -327,7 +327,7 @@ class EvaluationServiceTest {
 
         assertThatThrownBy(() -> this.evaluationService.addPeerEvaluation(evaluation))
                 .isInstanceOf(PeerEvaluationIllegalArgumentException.class)
-                .hasMessage("New peer evaluations require an active teammate.");
+                .hasMessage("New peer evaluations require an active teammate. Reload the current targets.");
         org.mockito.Mockito.verify(this.evaluationRepository, org.mockito.Mockito.never()).save(any());
     }
 
@@ -355,6 +355,10 @@ class EvaluationServiceTest {
         assertThat(result.getPrivateComments()).containsExactly(saved.getPrivateComment());
         assertThat(result.getRatingAverages()).hasSize(6)
                 .allSatisfy(rating -> assertThat(rating.getAverageScore()).isZero());
+        given(this.studentRepository.findById(4)).willReturn(Optional.of(this.eric));
+        PeerEvaluationAverage studentSummary = this.evaluationService.generateWeeklyPeerEvaluationSummaryForStudent(4, "2023-W31");
+        assertThat(studentSummary.getPrivateComments()).isNull();
+        assertThat(studentSummary.getPublicComments()).containsExactly(saved.getPublicComment());
     }
 
     @Test
@@ -369,6 +373,16 @@ class EvaluationServiceTest {
         assertThat(this.evaluationService.generateWeeklyPeerEvaluationReportForSection(2, "2023-W31")
                 .getPeerEvaluationAverages()).extracting(PeerEvaluationAverage::getStudentId).containsExactly(4);
         assertThat(this.evaluationService.generateWeeklyPeerEvaluationReportForSection(2, "2023-W32")
+                .getPeerEvaluationAverages()).isEmpty();
+    }
+
+    @Test
+    void activeStudentWithoutTeamIsOmittedFromSectionReport() {
+        // T14 / BR-deactivated-student-report: the existing team requirement still applies to active students.
+        this.eric.setTeam(null);
+        given(this.sectionRepository.findById(2)).willReturn(Optional.of(this.eric.getSection()));
+        given(this.studentRepository.findBySectionSectionId(2)).willReturn(List.of(this.eric));
+        assertThat(this.evaluationService.generateWeeklyPeerEvaluationReportForSection(2, "2023-W31")
                 .getPeerEvaluationAverages()).isEmpty();
     }
 

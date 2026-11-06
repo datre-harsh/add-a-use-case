@@ -93,7 +93,8 @@ class StudentServiceTest {
     void testFindStudentById() {
         // Given
         Student john = this.students.get(0);
-        given(this.studentRepository.findById(1)).willReturn(Optional.of(john));
+        given(this.userUtils.getUserId()).willReturn(1);
+        given(this.studentRepository.findReadableStudentById(1, 1, false)).willReturn(Optional.of(john));
 
         // When
         Student result = this.studentService.findStudentById(1);
@@ -127,7 +128,7 @@ class StudentServiceTest {
     @Test
     void testStudentUpdateOwnInfo() {
         // Given
-        Student update = new Student("john", "John (updated)", "Smith (updated)", "j.smith@abc.edu (updated)", "", false, "admin student");
+        Student update = new Student("john", "John (updated)", "Smith (updated)", "j.smith@abc.edu (updated)", "", true, "admin student");
         given(this.studentRepository.findById(1)).willReturn(Optional.of(this.students.get(0)));
         given(this.studentRepository.save(any(Student.class))).willReturn(this.students.get(0));
 
@@ -148,7 +149,7 @@ class StudentServiceTest {
         assertThat(result.getLastName()).isEqualTo(update.getLastName());
         assertThat(result.getEmail()).isEqualTo(update.getEmail());
         assertThat(result.getRoles()).isNotEqualTo(update.getRoles());
-        assertThat(result.isEnabled()).isNotEqualTo(update.isEnabled());
+        assertThat(result.isEnabled()).isTrue();
     }
 
     @Test
@@ -185,7 +186,6 @@ class StudentServiceTest {
         Student oldStudent = this.students.get(0);
         Student update = new Student("changed", "Changed", "Name", "changed@abc.edu", "", false, "student");
         given(this.studentRepository.findById(1)).willReturn(Optional.of(oldStudent));
-        given(this.userUtils.hasRole("ROLE_instructor")).willReturn(true);
 
         assertThatThrownBy(() -> this.studentService.updateStudent(1, update))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Deactivate");

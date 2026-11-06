@@ -68,7 +68,7 @@ public class EvaluationService {
         }
 
         if (!newPeerEvaluation.getEvaluatee().isEnabled()) {
-            throw new PeerEvaluationIllegalArgumentException("New peer evaluations require an active teammate.");
+            throw new PeerEvaluationIllegalArgumentException("New peer evaluations require an active teammate. Reload the current targets.");
         }
 
         // Make sure this is not a duplicate evaluation

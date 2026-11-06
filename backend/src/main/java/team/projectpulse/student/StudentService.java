@@ -71,8 +71,11 @@ public class StudentService {
     }
 
     public Student findStudentById(Integer studentId) {
-        return this.studentRepository.findById(studentId)
-                .orElseThrow(() -> new ObjectNotFoundException("student", studentId));
+        Integer callerId = this.userUtils.getUserId();
+        if (callerId == null) throw new AccessDeniedException("No permission.");
+        boolean canManage = this.userUtils.hasRole("ROLE_instructor") || this.userUtils.hasRole("ROLE_admin");
+        return this.studentRepository.findReadableStudentById(studentId, callerId, canManage)
+                .orElseThrow(() -> new AccessDeniedException("No permission."));
     }
 
     public List<Student> findStudentsByTeamId(Integer teamId) {
@@ -107,10 +110,10 @@ public class StudentService {
         Student oldStudent = this.studentRepository.findById(studentId)
                 .orElseThrow(() -> new ObjectNotFoundException("student", studentId));
 
-        boolean instructor = this.userUtils.hasRole("ROLE_instructor");
-        if (instructor && oldStudent.isEnabled() && !update.isEnabled()) {
+        if (oldStudent.isEnabled() && !update.isEnabled()) {
             throw new IllegalArgumentException("Use the Deactivate action to confirm student deactivation.");
         }
+        boolean instructor = this.userUtils.hasRole("ROLE_instructor");
 
         // If the user is not an admin, then the user can only update her username, first rubricName, last rubricName, and email
         oldStudent.setUsername(update.getUsername());

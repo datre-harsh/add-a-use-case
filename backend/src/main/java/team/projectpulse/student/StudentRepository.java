@@ -25,4 +25,15 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, JpaS
             """)
     Optional<Student> findManageableStudentById(@Param("studentId") Integer studentId,
                                                @Param("instructorId") Integer instructorId);
+
+    @Query("""
+            select distinct student from Student student
+            left join student.section.instructors instructor
+            where student.id = :studentId and
+              (student.id = :callerId or (:canManage = true and
+                (instructor.id = :callerId or student.section.course.courseAdmin.id = :callerId)))
+            """)
+    Optional<Student> findReadableStudentById(@Param("studentId") Integer studentId,
+                                             @Param("callerId") Integer callerId,
+                                             @Param("canManage") boolean canManage);
 }

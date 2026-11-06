@@ -82,4 +82,14 @@ class StudentDeactivationServiceTest {
         verify(this.studentRepository, never()).saveAndFlush(any());
         verify(this.studentRepository, never()).findById(any());
     }
+
+    @Test
+    void detailsLookupAlsoFailsClosedWithinCallerScope() {
+        // T02,T07 / details GET contract: the service repeats route approval with a scoped query.
+        given(this.userUtils.getUserId()).willReturn(1);
+        given(this.userUtils.hasRole("ROLE_instructor")).willReturn(true);
+        given(this.studentRepository.findReadableStudentById(4, 1, true)).willReturn(Optional.empty());
+        assertThatThrownBy(() -> this.studentService.findStudentById(4)).isInstanceOf(AccessDeniedException.class);
+        verify(this.studentRepository, never()).findById(any());
+    }
 }
