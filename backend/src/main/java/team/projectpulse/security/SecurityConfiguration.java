@@ -137,7 +137,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, StudentLifecycleAuthorizationManager studentLifecycleAuthorizationManager) throws Exception {
         return http
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
                         // Security rules for the /courses/** endpoint.
@@ -205,8 +205,9 @@ public class SecurityConfiguration {
                         // Security rules for the /students/** endpoint.
                         .requestMatchers(HttpMethod.POST, this.baseUrl + "/students/search").hasAuthority("ROLE_instructor")
                         .requestMatchers(HttpMethod.POST, this.baseUrl + "/students").permitAll()
-                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/students/{studentId}").access(this.userOwnershipAuthorizationManager)
+                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/students/{studentId}").access(AuthorizationManagers.anyOf(this.userOwnershipAuthorizationManager, studentLifecycleAuthorizationManager))
                         .requestMatchers(HttpMethod.PUT, this.baseUrl + "/students/{studentId}").access(this.userOwnershipAuthorizationManager)
+                        .requestMatchers(HttpMethod.PUT, this.baseUrl + "/students/{studentId}/deactivation").access(studentLifecycleAuthorizationManager)
                         .requestMatchers(HttpMethod.DELETE, this.baseUrl + "/students/{studentId}").access(this.userOwnershipAuthorizationManager)
                         .requestMatchers(HttpMethod.GET, this.baseUrl + "/students/teams/{teamId}").access(this.teamMembershipAuthorizationManager)
 
