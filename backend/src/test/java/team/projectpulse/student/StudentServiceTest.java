@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -153,7 +154,8 @@ class StudentServiceTest {
     @Test
     void testInstructorUpdatesStudent() {
         // Given
-        Student update = new Student("john", "John (updated)", "Smith (updated)", "j.smith@abc.edu (updated)", "", false, "admin student");
+        Student update = new Student("john", "John (updated)", "Smith (updated)", "j.smith@abc.edu (updated)", "", true, "admin student");
+        given(this.userUtils.hasRole("ROLE_instructor")).willReturn(true);
         given(this.studentRepository.findById(1)).willReturn(Optional.of(this.students.get(0)));
         given(this.studentRepository.save(any(Student.class))).willReturn(this.students.get(0));
 
@@ -175,6 +177,35 @@ class StudentServiceTest {
         assertThat(result.getEmail()).isEqualTo(update.getEmail());
 //        assertThat(result.getRoles()).isEqualTo(update.getRoles());
         assertThat(result.isEnabled()).isEqualTo(update.isEnabled());
+    }
+
+    @Test
+    void profileEditingCannotDeactivateAnActiveStudent() {
+        // T15 / UC-STU-deactivate-student Associated Information: only the confirmed action deactivates.
+        Student oldStudent = this.students.get(0);
+        Student update = new Student("changed", "Changed", "Name", "changed@abc.edu", "", false, "student");
+        given(this.studentRepository.findById(1)).willReturn(Optional.of(oldStudent));
+        given(this.userUtils.hasRole("ROLE_instructor")).willReturn(true);
+
+        assertThatThrownBy(() -> this.studentService.updateStudent(1, update))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Deactivate");
+        assertThat(oldStudent.isEnabled()).isTrue();
+        assertThat(oldStudent.getFirstName()).isEqualTo("John");
+        verify(this.studentRepository, never()).save(any());
+    }
+
+    @Test
+    void profileEditingStillReactivatesAnInactiveStudent() {
+        // T15 / stu.md API contract: preserve the existing inactive-to-active profile update.
+        Student oldStudent = this.students.get(0);
+        oldStudent.setEnabled(false);
+        Student update = new Student("john", "John", "Smith", "j.smith@abc.edu", "", true, "student");
+        given(this.studentRepository.findById(1)).willReturn(Optional.of(oldStudent));
+        given(this.userUtils.hasRole("ROLE_instructor")).willReturn(true);
+        given(this.studentRepository.save(oldStudent)).willReturn(oldStudent);
+
+        assertThat(this.studentService.updateStudent(1, update).isEnabled()).isTrue();
+        verify(this.studentRepository).save(oldStudent);
     }
 
     @Test

@@ -316,6 +316,63 @@ class EvaluationServiceTest {
     }
 
     @Test
+    void newEvaluationOfInactiveTeammateIsRefused() {
+        // T13 / BR-evaluation-active-evaluatee: a stale page cannot create a new evaluation.
+        Clock fixedClock = Clock.fixed(Instant.parse("2023-08-13T00:00:00Z"), ZoneOffset.UTC);
+        given(this.clock.instant()).willReturn(fixedClock.instant());
+        given(this.clock.getZone()).willReturn(fixedClock.getZone());
+        this.woody.setEnabled(false);
+        PeerEvaluation evaluation = new PeerEvaluation("2023-W31", this.amanda, this.woody,
+                List.of(), "public", "private");
+
+        assertThatThrownBy(() -> this.evaluationService.addPeerEvaluation(evaluation))
+                .isInstanceOf(PeerEvaluationIllegalArgumentException.class)
+                .hasMessage("New peer evaluations require an active teammate.");
+        org.mockito.Mockito.verify(this.evaluationRepository, org.mockito.Mockito.never()).save(any());
+    }
+
+    @Test
+    void inactiveStudentKeepsZeroScoresAfterSeparateTeamRemoval() {
+        // T14 / BR-deactivated-student-report: saved rows count even with zero scores and no current team.
+        this.eric.setEnabled(false);
+        this.eric.setTeam(null);
+        PeerEvaluation saved = this.ericsW31Evaluations.get(0);
+        saved.getRatings().forEach(rating -> rating.setActualScore(0.0));
+        saved.calculateTotalScore();
+        given(this.sectionRepository.findById(2)).willReturn(Optional.of(this.eric.getSection()));
+        given(this.studentRepository.findBySectionSectionId(2)).willReturn(List.of(this.eric));
+        given(this.evaluationRepository.existsByWeekAndEvaluateeId("2023-W31", 4)).willReturn(true);
+        given(this.evaluationRepository.findByWeekAndEvaluateeId("2023-W31", 4)).willReturn(List.of(saved));
+
+        WeeklyPeerEvaluationReport report = this.evaluationService.generateWeeklyPeerEvaluationReportForSection(2, "2023-W31");
+
+        assertThat(report.getPeerEvaluationAverages()).hasSize(1);
+        PeerEvaluationAverage result = report.getPeerEvaluationAverages().get(0);
+        assertThat(result.getStudentId()).isEqualTo(4);
+        assertThat(result.getTeamName()).isNull();
+        assertThat(result.getAverageTotalScore()).isZero();
+        assertThat(result.getPublicComments()).containsExactly(saved.getPublicComment());
+        assertThat(result.getPrivateComments()).containsExactly(saved.getPrivateComment());
+        assertThat(result.getRatingAverages()).hasSize(6)
+                .allSatisfy(rating -> assertThat(rating.getAverageScore()).isZero());
+    }
+
+    @Test
+    void inactiveStudentAppearsOnlyInWeeksWithSavedResults() {
+        // T14 / BR-deactivated-student-report: retained membership alone does not create a report row.
+        this.eric.setEnabled(false);
+        given(this.sectionRepository.findById(2)).willReturn(Optional.of(this.eric.getSection()));
+        given(this.studentRepository.findBySectionSectionId(2)).willReturn(List.of(this.eric));
+        given(this.evaluationRepository.existsByWeekAndEvaluateeId("2023-W31", 4)).willReturn(true);
+        given(this.evaluationRepository.findByWeekAndEvaluateeId("2023-W31", 4)).willReturn(this.ericsW31Evaluations);
+
+        assertThat(this.evaluationService.generateWeeklyPeerEvaluationReportForSection(2, "2023-W31")
+                .getPeerEvaluationAverages()).extracting(PeerEvaluationAverage::getStudentId).containsExactly(4);
+        assertThat(this.evaluationService.generateWeeklyPeerEvaluationReportForSection(2, "2023-W32")
+                .getPeerEvaluationAverages()).isEmpty();
+    }
+
+    @Test
     void testAddPeerEvaluationNotInActiveWeeks() {
         // Given
         // No clock is needed here: an inactive week is refused before the previous-week check reads the clock
@@ -416,6 +473,8 @@ class EvaluationServiceTest {
 
     @Test
     void testUpdatePeerEvaluation() {
+        // T13 / BR-evaluation-active-evaluatee: saved evaluations remain editable after deactivation.
+        this.eric.setEnabled(false);
         // Given
         // Aug 8, 2023 falls in 2023-W32, which makes 2023-W31 the previous week and this evaluation's window open
         LocalDate fixedDate = LocalDate.of(2023, 8, 8);
