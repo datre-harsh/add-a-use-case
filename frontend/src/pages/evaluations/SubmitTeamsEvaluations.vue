@@ -102,6 +102,13 @@
         <el-empty description="No data is available." />
       </template>
     </el-table>
+    <el-alert
+      v-if="submissionError"
+      :title="submissionError"
+      type="error"
+      :closable="false"
+      data-cy="evaluation-submit-error"
+    />
     <!-- submit button on the right side-->
     <div style="display: flex; justify-content: flex-end">
       <el-button
@@ -158,6 +165,7 @@ const students = ref<Student[]>([]) // Students on the same team
 const sectionId = ref<number>() // Section ID of the team
 const criteria = ref<Criterion[]>([]) // Criteria used for peer evaluations
 const isLoading = ref(false)
+const submissionError = ref('')
 
 const userInfoStore = useUserInfoStore() // Need team ID to search for students
 
@@ -209,38 +217,47 @@ async function prepareStartingPeerEvaluations() {
   } else {
     // If not, create a new set of evaluations
     isNewSubmission = true
-    peerEvalutions.value = students.value.map((student) => ({
-      week: previousWeek.value,
-      evaluatorId: (userInfoStore.userInfo as Student).id as number,
-      evaluateeId: student.id as number,
-      evaluateeName: `${student.firstName} ${student.lastName}`,
-      ratings: criteria.value.map((criterion) => ({
-        criterionId: criterion.criterionId as number,
-        criterion: criterion.criterion,
-        actualScore: 10 // Default score, can be changed by the user
-      })),
-      publicComment: '',
-      privateComment: ''
-    }))
+    peerEvalutions.value = students.value
+      .filter((student) => student.enabled)
+      .map((student) => ({
+        week: previousWeek.value,
+        evaluatorId: (userInfoStore.userInfo as Student).id as number,
+        evaluateeId: student.id as number,
+        evaluateeName: `${student.firstName} ${student.lastName}`,
+        ratings: criteria.value.map((criterion) => ({
+          criterionId: criterion.criterionId as number,
+          criterion: criterion.criterion,
+          actualScore: 10 // Default score, can be changed by the user
+        })),
+        publicComment: '',
+        privateComment: ''
+      }))
   }
 }
 
 // Submit peer evaluations
 async function submitPeerEvaluations() {
-  if (peerEvalutions.value) {
-    const submitPromises = peerEvalutions.value.map(async (evaluation) => {
-      const result: SubmitPeerEvaluationResponse = await submitEvaluation(evaluation)
-      return result.data
-    })
+  if (peerEvalutions.value && !isLoading.value) {
     isLoading.value = true
-    peerEvalutions.value = await Promise.all(submitPromises) // Wait for all promises to resolve
-    isNewSubmission = false // Change to update mode
-    ElMessage.success('Peer evaluations submitted successfully')
-    isLoading.value = false
+    submissionError.value = ''
+    try {
+      const submitPromises = peerEvalutions.value.map(async (evaluation) => {
+        const result: SubmitPeerEvaluationResponse = await submitEvaluation(evaluation)
+        return result.data
+      })
+      peerEvalutions.value = await Promise.all(submitPromises) // Wait for all promises to resolve
+      isNewSubmission = false // Change to update mode
+      ElMessage.success('Peer evaluations submitted successfully')
 
-    // Send an submission confirmation email to the submitter
-    await sendPeerEvaluationSubmissionConfirmationEmail(previousWeekRange.value)
-    ElMessage.success('A confirmation email has been sent to you.')
+      // Send an submission confirmation email to the submitter
+      await sendPeerEvaluationSubmissionConfirmationEmail(previousWeekRange.value)
+      ElMessage.success('A confirmation email has been sent to you.')
+    } catch {
+      submissionError.value =
+        'Some evaluations could not be saved. Reload the current targets before trying again. Saved evaluations are kept.'
+    } finally {
+      isLoading.value = false
+    }
   }
 }
 
