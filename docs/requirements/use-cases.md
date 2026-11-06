@@ -1474,6 +1474,8 @@ Details:
 7. Use case ends.
 
 **Extensions:**
+- **1a. The caller is not authenticated, or her own account is deactivated:**
+  - 1a1. The system refuses protected access under FR-SEC-authentication and FR-SEC-active-account and requests sign-in. Nothing is changed. Use case ends.
 - **6a. The selected student is already deactivated, including a repeated confirmation:**
   - 6a1. After checking the caller's authority, the system confirms that the student is deactivated without changing her account, membership, or submitted work. Use case ends.
 **Priority:** Low
@@ -1481,7 +1483,8 @@ Details:
 **Business Rules:** BR-student-lifecycle, BR-student-deactivation-membership, BR-submission-owed, BR-evaluation-active-evaluatee, BR-deactivated-student-report
 
 **Associated Information:**
-- Consequence of the deactivation: The student will no longer be able to log in or submit weekly activity reports and peer evaluations, but the student's account and her previously submitted work are kept in the system. Deactivation will NOT remove the student from the system, and the account can be reactivated in the future (UC-STU-reactivate-student: Reactivate a student). This is distinct from deletion (UC-STU-delete-student: Delete a student), which is a physical, unrecoverable delete. The course admin or instructor shall be able to cancel the use case at any time prior to submitting it.
+- The step 4 warning identifies the selected student by name and identifier and explains the effects governed by FR-SEC-active-account, BR-submission-owed, BR-evaluation-active-evaluatee, BR-deactivated-student-report, and BR-student-deactivation-membership. It distinguishes deactivation from deletion and states that later reactivation is possible through UC-STU-reactivate-student.
+- FR-SEC-active-account applies to a student already signed in: once deactivation completes, every subsequent protected request is refused even with her previously issued, unexpired token. A request admitted before deactivation completed may finish. Content already displayed in a browser is not recalled.
 
 **Related Use Cases:** UC-STU-delete-student: Delete a student; UC-STU-reactivate-student: Reactivate a student
 **Assumptions:**
