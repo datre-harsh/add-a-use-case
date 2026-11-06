@@ -1458,7 +1458,7 @@ Details:
 
 **Preconditions:**
 - PRE-1. The course admin or instructor is logged into the system.
-- PRE-2. The course admin or instructor has selected a student. The selected student's account need not still be active when confirmation reaches the system.
+- PRE-2. The course admin or instructor has selected a student.
 
 **Postconditions:**
 - POST-1. The student's account is deactivated.
@@ -1474,29 +1474,29 @@ Details:
 7. Use case ends.
 
 **Extensions:**
-- **1a. The caller is not authenticated, or her own account is deactivated:**
-  - 1a1. The system refuses protected access under FR-SEC-authentication and FR-SEC-active-account and requests sign-in. Nothing is changed. Use case ends.
-- **2a. The target does not exist, or the caller is not authorized for that target:**
-  - 2a1. The system refuses the action under BR-student-lifecycle and BR-section-scoped-access without revealing whether the student exists. Nothing is changed. Use case ends.
-- **4a. The course admin or instructor cancels or dismisses the warning before confirming:**
-  - 4a1. The system returns to the student details without submitting a deactivation request or changing any data. Use case ends.
-- **6a. The selected student is already deactivated, including a repeated confirmation:**
-  - 6a1. After checking the caller's authority, the system confirms that the student is deactivated without changing her account, membership, or submitted work. Use case ends.
-- **6b. The caller lost authority after viewing the warning:**
-  - 6b1. The system checks BR-student-lifecycle and BR-section-scoped-access again when confirmation is processed and refuses the action. Nothing is changed. Use case ends.
+- **1a. The caller is not logged in, or her account is inactive:**
+  - 1a1. The system refuses access and asks her to log in (FR-SEC-authentication, FR-SEC-active-account). Nothing is changed. Use case ends.
+- **2a. The student does not exist, or the caller cannot deactivate her:**
+  - 2a1. The system refuses the action without saying whether the student exists (BR-student-lifecycle, BR-section-scoped-access). Nothing is changed. Use case ends.
+- **4a. The course admin or instructor cancels or closes the warning:**
+  - 4a1. The system returns to the student details. It sends no deactivation request and changes nothing. Use case ends.
+- **6a. The student is already deactivated:**
+  - 6a1. The system checks the caller's permission, then confirms that the student is inactive. It makes no further changes. Use case ends.
+- **6b. The caller lost permission after viewing the warning:**
+  - 6b1. The system checks permission again when it receives confirmation and refuses the action (BR-student-lifecycle, BR-section-scoped-access). Nothing is changed. Use case ends.
 - **6c. The deactivation cannot be saved:**
-  - 6c1. The system rolls back the failed change and reports that deactivation failed, without displaying success. Use case ends.
-- **6d. The client does not receive a conclusive response:**
-  - 6d1. The client reports that the outcome is unknown and asks the instructor to reload the student's details. It does not claim success or automatically repeat the request. A later explicit confirmation follows extension 6a if deactivation already completed.
+  - 6c1. The system rolls back the change and reports that deactivation failed. It does not show success. Use case ends.
+- **6d. The page does not receive a clear result:**
+  - 6d1. The page says that the result is unknown and asks the instructor to reload the student's details. It does not show success or retry automatically. If the instructor tries again after the change was saved, extension 6a applies.
 
 **Priority:** Low
 **Frequency of Use:** Rare. Occurs occasionally when a student withdraws from a course section.
 **Business Rules:** BR-student-lifecycle, BR-section-scoped-access, BR-role-based-access, BR-student-deactivation-membership, BR-submission-owed, BR-evaluation-active-evaluatee, BR-deactivated-student-report
 
 **Associated Information:**
-- The step 4 warning identifies the selected student by name and identifier and explains the effects governed by FR-SEC-active-account, BR-submission-owed, BR-evaluation-active-evaluatee, BR-deactivated-student-report, and BR-student-deactivation-membership. It distinguishes deactivation from deletion and states that later reactivation is possible through UC-STU-reactivate-student.
-- FR-SEC-active-account applies to a student already signed in: once deactivation completes, every subsequent protected request is refused even with her previously issued, unexpired token. A request admitted before deactivation completed may finish. Content already displayed in a browser is not recalled.
-- Deactivation is a separate confirmed action; saving edited profile details cannot deactivate an active student. The existing reactivation path is outside this use case.
+- The warning shows the student's name and ID. It explains the access, reminder, evaluation, and record-retention effects in FR-SEC-active-account, BR-submission-owed, BR-evaluation-active-evaluatee, BR-deactivated-student-report, and BR-student-deactivation-membership. It also explains that this is not deletion and the account can be reactivated through UC-STU-reactivate-student.
+- FR-SEC-active-account also applies to a student who is already logged in. Once deactivation finishes, her next protected request is refused even if her token has not expired. A request already accepted may finish, and content already displayed stays on the page.
+- Deactivation requires its own confirmation. Saving profile details cannot deactivate an active student. Reactivation is covered by its separate use case.
 
 **Related Use Cases:** UC-STU-delete-student: Delete a student; UC-STU-reactivate-student: Reactivate a student
 **Assumptions:**
