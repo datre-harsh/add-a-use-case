@@ -92,7 +92,7 @@ All responses use the existing `Result` envelope. Caller identity comes from `Us
 
 There is no schema change. Reuse the [student model](../../backend/src/main/java/team/projectpulse/student/Student.java) and the SRS's [Business Domain Model](../requirements/software-requirements-specification.md#business-domain-model). Deactivation changes only `enabled`; it does not call a delete method or change enrollment, team membership, activities, evaluations, or ratings.
 
-The first implementation commit contains the shared JWT and evaluation changes with their tests. Review that commit before adding the endpoint and UI. Keep the new route's permission rule in a separate commit so it is easy to review. These changes stay within the existing component boundaries.
+Commit the shared JWT and evaluation changes separately, with their tests, before adding the endpoint and UI. Keep each `SecurityConfiguration` change in its own commit, including the JWT wiring and the new route's permission rule. Pause to review the shared changes before building the rest. These changes stay within the existing component boundaries.
 
 ## Test list
 
@@ -110,7 +110,7 @@ Each row states an expected result from the use case or a cited rule. Unit tests
 | T08 | Extension 6c | Integration | Force a persistence failure. The API returns failure; a fresh read shows that the account change rolled back. |
 | T09 | Extension 6d | UI integration | A network failure shows an unknown result, no success message, and no automatic retry. |
 | T10 | FR-SEC-active-account | Integration | A student's token works before deactivation and receives `401` afterward. Fresh login also fails. Another active student still has access. |
-| T11 | JWT validation | Unit | Missing or invalid `userId`, a deleted account, and inactive student or instructor accounts fail validation. Keep the existing token-expiry checks. |
+| T11 | JWT validation; FR-SEC-authentication | Unit and integration | Missing or invalid `userId`, a deleted account, and inactive student or instructor accounts fail validation. Expired tokens and tokens with an invalid signature still receive `401` through the configured security filter chain. |
 | T12 | BR-submission-owed | Unit | The inactive student owes neither item. Active teammates no longer owe an evaluation of her. |
 | T13 | BR-evaluation-active-evaluatee | Unit and integration | A new evaluation of an inactive teammate is rejected, including a stale-page request. An active teammate remains a valid target. |
 | T14 | BR-deactivated-student-report | Unit | An inactive student with saved evaluations appears for that week, including zero scores and a retained result after a separate team removal. An inactive student with no results for that week is omitted. |
