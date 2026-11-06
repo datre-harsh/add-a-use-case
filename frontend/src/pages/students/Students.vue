@@ -46,6 +46,7 @@
             circle
             plain
             type="primary"
+            :data-cy="`student-edit-${row.id}`"
             @click.stop="showEditStudentDialog(row)"
           ></el-button>
         </template>
@@ -67,7 +68,12 @@
       style="margin-top: 20px; justify-content: flex-end"
     />
     <!-- Dialog for editing student -->
-    <el-dialog v-model="dialogVisible" title="Edit a student" width="30%" destroy-on-close>
+    <el-dialog
+      v-model="dialogVisible"
+      title="Edit a student"
+      width="min(600px, 95vw)"
+      destroy-on-close
+    >
       <EditStudentForm
         :studentId="studentBeingEditedId"
         @close-dialog="closeDialog"
