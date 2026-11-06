@@ -1476,11 +1476,15 @@ Details:
 **Extensions:**
 - **1a. The caller is not authenticated, or her own account is deactivated:**
   - 1a1. The system refuses protected access under FR-SEC-authentication and FR-SEC-active-account and requests sign-in. Nothing is changed. Use case ends.
+- **2a. The target does not exist, or the caller is not authorized for that target:**
+  - 2a1. The system refuses the action under BR-student-lifecycle and BR-section-scoped-access without revealing whether the student exists. Nothing is changed. Use case ends.
 - **6a. The selected student is already deactivated, including a repeated confirmation:**
   - 6a1. After checking the caller's authority, the system confirms that the student is deactivated without changing her account, membership, or submitted work. Use case ends.
+- **6b. The caller lost authority after viewing the warning:**
+  - 6b1. The system checks BR-student-lifecycle and BR-section-scoped-access again when confirmation is processed and refuses the action. Nothing is changed. Use case ends.
 **Priority:** Low
 **Frequency of Use:** Rare. Occurs occasionally when a student withdraws from a course section.
-**Business Rules:** BR-student-lifecycle, BR-student-deactivation-membership, BR-submission-owed, BR-evaluation-active-evaluatee, BR-deactivated-student-report
+**Business Rules:** BR-student-lifecycle, BR-section-scoped-access, BR-role-based-access, BR-student-deactivation-membership, BR-submission-owed, BR-evaluation-active-evaluatee, BR-deactivated-student-report
 
 **Associated Information:**
 - The step 4 warning identifies the selected student by name and identifier and explains the effects governed by FR-SEC-active-account, BR-submission-owed, BR-evaluation-active-evaluatee, BR-deactivated-student-report, and BR-student-deactivation-membership. It distinguishes deactivation from deletion and states that later reactivation is possible through UC-STU-reactivate-student.
