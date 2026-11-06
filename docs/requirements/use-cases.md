@@ -1484,6 +1484,11 @@ Details:
   - 6a1. After checking the caller's authority, the system confirms that the student is deactivated without changing her account, membership, or submitted work. Use case ends.
 - **6b. The caller lost authority after viewing the warning:**
   - 6b1. The system checks BR-student-lifecycle and BR-section-scoped-access again when confirmation is processed and refuses the action. Nothing is changed. Use case ends.
+- **6c. The deactivation cannot be saved:**
+  - 6c1. The system rolls back the failed change and reports that deactivation failed, without displaying success. Use case ends.
+- **6d. The client does not receive a conclusive response:**
+  - 6d1. The client reports that the outcome is unknown and asks the instructor to reload the student's details. It does not claim success or automatically repeat the request. A later explicit confirmation follows extension 6a if deactivation already completed.
+
 **Priority:** Low
 **Frequency of Use:** Rare. Occurs occasionally when a student withdraws from a course section.
 **Business Rules:** BR-student-lifecycle, BR-section-scoped-access, BR-role-based-access, BR-student-deactivation-membership, BR-submission-owed, BR-evaluation-active-evaluatee, BR-deactivated-student-report
@@ -1491,6 +1496,7 @@ Details:
 **Associated Information:**
 - The step 4 warning identifies the selected student by name and identifier and explains the effects governed by FR-SEC-active-account, BR-submission-owed, BR-evaluation-active-evaluatee, BR-deactivated-student-report, and BR-student-deactivation-membership. It distinguishes deactivation from deletion and states that later reactivation is possible through UC-STU-reactivate-student.
 - FR-SEC-active-account applies to a student already signed in: once deactivation completes, every subsequent protected request is refused even with her previously issued, unexpired token. A request admitted before deactivation completed may finish. Content already displayed in a browser is not recalled.
+- Deactivation is a separate confirmed action; saving edited profile details cannot deactivate an active student. The existing reactivation path is outside this use case.
 
 **Related Use Cases:** UC-STU-delete-student: Delete a student; UC-STU-reactivate-student: Reactivate a student
 **Assumptions:**
