@@ -124,7 +124,7 @@ Each row states an expected result from the use case or a cited rule. Unit tests
 ## Limits to check during implementation
 
 - Account validation adds a user lookup per authenticated request. A failed lookup must deny access.
-- Reuse the existing [MyUserPrincipal.isEnabled()](../../backend/src/main/java/team/projectpulse/user/MyUserPrincipal.java) login check; T10–T11 verify it alongside the new JWT check. The architecture's full-token-lifetime limitation describes the current code, before this design is implemented.
+- Reuse the existing [MyUserPrincipal.isEnabled()](../../backend/src/main/java/team/projectpulse/user/MyUserPrincipal.java) login check; T10–T11 verify it alongside the new JWT check. Account deactivation now blocks the next protected request; individual-token revocation remains outside this design.
 - Requests accepted before deactivation finishes may complete, as stated in the use case.
 - The design does not build UC-STU-reactivate-student. Its Associated Information records the membership decision for later work.
 - The build PR must report which tests actually ran. Test code alone is not verification.
