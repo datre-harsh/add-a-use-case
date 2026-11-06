@@ -1462,6 +1462,7 @@ Details:
 
 **Postconditions:**
 - POST-1. The student's account is deactivated.
+- POST-2. Her enrollment, team assignment, and submitted work are preserved under BR-student-deactivation-membership.
 
 **Main Success Scenario:**
 1. The course admin or instructor indicates to deactivate a student.
@@ -1477,7 +1478,7 @@ Details:
   - 6a1. After checking the caller's authority, the system confirms that the student is deactivated without changing her account, membership, or submitted work. Use case ends.
 **Priority:** Low
 **Frequency of Use:** Rare. Occurs occasionally when a student withdraws from a course section.
-**Business Rules:** BR-student-lifecycle
+**Business Rules:** BR-student-lifecycle, BR-student-deactivation-membership, BR-submission-owed
 
 **Associated Information:**
 - Consequence of the deactivation: The student will no longer be able to log in or submit weekly activity reports and peer evaluations, but the student's account and her previously submitted work are kept in the system. Deactivation will NOT remove the student from the system, and the account can be reactivated in the future (UC-STU-reactivate-student: Reactivate a student). This is distinct from deletion (UC-STU-delete-student: Delete a student), which is a physical, unrecoverable delete. The course admin or instructor shall be able to cancel the use case at any time prior to submitting it.
@@ -1515,10 +1516,11 @@ Details:
 **Extensions:**
 **Priority:** Low
 **Frequency of Use:** Rare. Occurs occasionally when a previously withdrawn student returns to a course section.
-**Business Rules:** BR-student-lifecycle
+**Business Rules:** BR-student-lifecycle, BR-student-deactivation-membership
 
 **Associated Information:**
 - The course admin or instructor shall be able to cancel the use case at any time prior to submitting it.
+- Reactivation uses the assignment preserved by deactivation, subject to any separate course admin team changes (BR-student-deactivation-membership).
 
 **Related Use Cases:** UC-STU-delete-student: Delete a student; UC-STU-deactivate-student: Deactivate a student
 **Assumptions:**
